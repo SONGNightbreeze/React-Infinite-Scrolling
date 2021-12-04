@@ -51,10 +51,10 @@ function handleSearch(e){
 >
 > every character we type cause this function run which updates our query which then updates our search, so we're going to fix  
 >
-> this data has a docs field which is all of the different books numFound, num_found is useful for what we know when to end our entire scrolling start is a page were currently on 
+> this data has a docs field which is all of the different books numFound, num_found is useful for what we know when to end our entire scrolling start is a page were currently on 当输入的时候并不想要发送每个字符来搜索结果，当我们在输入框打字的时候删除单个的字符
 >
-> this cancellation, we dont want to send a query every single time we want to cancel our query if we are typing information 
-### in the useBookSearch, Axios is easy way to set up cancellations
+> this cancellation, we dont want to send a query every single time we want to cancel our query if we are typing information 类似于防抖函数的效果
+### in the useBookSearch, Axios is easy way to set up cancellations 取消发送请求，将取消的请求赋值给变量cancel
 ```cancelToken: new axios.cancelToken(c => cancel = c)```
 ### create a variable
 ```let cancel```
@@ -65,7 +65,7 @@ function handleSearch(e){
 ### useEffect return
 > and what we can do instead of user fact is if you return something from useEffect
 > 
-> you return a function inside that function we can just called cancel.
+> you return a function inside that function we can just called cancel.返回的要是一个函数
 >  
 > this is going cancel our request every single time it recall a useEffect
 
@@ -80,11 +80,32 @@ function handleSearch(e){
     //we want to check to see if this is an Axios cancellation error
     if(axios.isCancel(e)) return 
 })
+// 完整版
+  useEffect(() => {
+    setLoading(true)
+    setError(false)
+    let cancel
+    axios({
+      method: 'GET',
+      url: 'http://openlibrary.org/search.json',
+      params: { q: query, page: pageNumber },
+      // axios中创建一个cancelToken
+      cancelToken: new axios.CancelToken(c => cancel = c)
+    }).then(res => {
+      setBooks(......
+     ).catch(e => {
+     // 当error的时候也取消请求，停止函数
+      if (axios.isCancel(e)) return
+      setError(true)
+    })
+    // 可以取消没单次字符发送的请求
+    return () => cancel()
+  }, [query, pageNumber])
 ```
     
 > we just want to return essentially we're saying ignore every single time that we can still request because we meant to cancel it 
 >
->if we start typing you'll see that only one request is made no matter how many
+> if we start typing you'll see that only one request is made no matter how many
 >
 > characters we type its only going to send that one single request and its not going to send a bunch of extra requests because its actually cancelling those for us 
 ------------------------
